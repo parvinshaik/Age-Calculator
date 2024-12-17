@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Age Calculator</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 350px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #0077cc;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #005fa3;
+        }
+
+        .result, .zodiac {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        img {
+            display: none;
+            margin-top: 10px;
+            width: 100px;
+            border-radius: 50%;
+            border: 2px solid #0077cc;
+        }
+
+        /* Dark Mode Styling */
+        body.dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .container.dark-mode {
+            background-color: #555;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enhanced Age Calculator</h1>
+        
+        <!-- Birthdate Input -->
+        <label for="birthdate">Enter Your Birthdate:</label>
+        <input type="date" id="birthdate">
+        
+        <!-- Profile Picture Upload -->
+        <label for="profilePic">Upload Profile Picture:</label>
+        <input type="file" id="profilePic" accept="image/*" onchange="displayProfilePic()">
+        <img id="profileImage" alt="Profile Picture">
+
+        <!-- Buttons -->
+        <button onclick="calculateAge()">Calculate Age</button>
+        <button onclick="toggleTheme()">Toggle Dark/Light Mode</button>
+
+        <!-- Results Display -->
+        <div class="result" id="result"></div>
+        <div class="zodiac" id="zodiac"></div>
+        <button onclick="shareResult()">Share Result</button>
+    </div>
+
+    <script>
+        // Display Profile Picture
+        function displayProfilePic() {
+            const fileInput = document.getElementById("profilePic");
+            const image = document.getElementById("profileImage");
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    image.src = e.target.result;
+                    image.style.display = "block";
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // Calculate Age and Other Features
+        function calculateAge() {
+            const birthdate = document.getElementById("birthdate").value;
+            const resultDiv = document.getElementById("result");
+            const zodiacDiv = document.getElementById("zodiac");
+
+            if (!birthdate) {
+                resultDiv.innerHTML = "Please select a valid birthdate.";
+                return;
+            }
+
+            const birthDateObj = new Date(birthdate);
+            const today = new Date();
+
+            let years = today.getFullYear() - birthDateObj.getFullYear();
+            let months = today.getMonth() - birthDateObj.getMonth();
+            let days = today.getDate() - birthDateObj.getDate();
+
+            if (days < 0) {
+                months--;
+                days += new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+            }
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            // Days until next birthday
+            const nextBirthday = new Date(today.getFullYear(), birthDateObj.getMonth(), birthDateObj.getDate());
+            if (today > nextBirthday) nextBirthday.setFullYear(today.getFullYear() + 1);
+            const daysUntilNextBirthday = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
+
+            // Zodiac Sign
+            const zodiac = getZodiacSign(birthDateObj.getDate(), birthDateObj.getMonth() + 1);
+
+            // Age in seconds, minutes, and hours
+            const totalDays = years * 365 + months * 30 + days;
+            const hours = totalDays * 24;
+            const minutes = hours * 60;
+            const seconds = minutes * 60;
+
+            resultDiv.innerHTML = `
+                You are ${years} years, ${months} months, and ${days} days old.<br>
+                Your next birthday is in ${daysUntilNextBirthday} days.<br>
+                ⏳ Hours: ${hours}, Minutes: ${minutes}, Seconds: ${seconds}
+            `;
+            zodiacDiv.innerHTML = `Your Zodiac Sign: <b>${zodiac}</b>`;
+
+            localStorage.setItem("lastResult", resultDiv.innerHTML);
+        }
+
+        // Get Zodiac Sign
+        function getZodiacSign(day, month) {
+            const signs = ["Capricorn", "Aquarius", "Pisces", "Aries", "Taurus", "Gemini", 
+                           "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius"];
+            const dates = [20, 19, 20, 20, 21, 21, 20, 20, 21, 21, 21, 20];
+            return day > dates[month - 1] ? signs[month] : signs[month - 1];
+        }
+
+        // Dark/Light Mode
+        function toggleTheme() {
+            document.body.classList.toggle("dark-mode");
+            document.querySelector(".container").classList.toggle("dark-mode");
+        }
+
+        // Share Results via WhatsApp
+        function shareResult() {
+            const result = document.getElementById("result").innerText;
+            const shareUrl = `https://wa.me/?text=${encodeURIComponent(result)}`;
+            window.open(shareUrl, "_blank");
+        }
+
+        // Load Saved Result on Page Load
+        window.onload = () => {
+            const savedResult = localStorage.getItem("lastResult");
+            if (savedResult) document.getElementById("result").innerHTML = savedResult;
+        };
+    </script>
+</body>
+</html>
